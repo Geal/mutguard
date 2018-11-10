@@ -177,7 +177,7 @@ impl<'a, T> MutGuard<MutGuardWrapper<'a, T>> {
     }
 }
 
-/// Structure returned by the `Mutguard::guard()`. when this is dropped, iter
+/// Structure returned by the `MutGuard::guard()`. when this is dropped, it
 /// will call the `Guard::finish()` method of the wrapped element
 pub struct MutGuardBorrow<'a, T: Guard> {
     inner: &'a mut MutGuard<T>,
