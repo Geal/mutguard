@@ -1,5 +1,11 @@
 # MutGuard
 
+[![LICENSE](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Build Status](https://travis-ci.org/Geal/mutguard.svg?branch=master)](https://travis-ci.org/Geal/mutguard)
+[![Coverage Status](https://coveralls.io/repos/Geal/mutguard/badge.svg?branch=master)](https://coveralls.io/r/Geal/mutguard?branch=master)
+[![Crates.io Version](https://img.shields.io/crates/v/mut_guard.svg)](https://crates.io/crates/mut_guard)
+[![Documentation](https://docs.rs/mut_guard/badge.svg)](https://docs.rs/mut_guard)
+
 this library allows you to call a function after
 some data has been mutably borrowed.
 
