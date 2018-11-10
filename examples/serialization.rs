@@ -16,11 +16,11 @@ struct Data {
 
 impl Guard for Data {
     fn finish(&mut self) {
-        File::create("data.json")
+        let _ = File::create("data.json")
             .map_err(|e| {
-                println!("could not create data file");
+                println!("could not create data file: {:?}", e);
             })
-            .and_then(|mut f| {
+            .and_then(|f| {
                 serde_json::to_writer(f, self).map_err(|e| {
                     println!("could not serialize data: {:?}", e);
                 })
