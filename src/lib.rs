@@ -3,6 +3,8 @@
 //! this library allows you to call a function after
 //! some data has been mutably borrowed.
 //!
+//! *Note*: that function will be called from a `Drop` handler
+//!
 //! ## Use cases
 //!
 //! ### Invariant checks
