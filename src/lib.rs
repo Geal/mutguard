@@ -108,7 +108,7 @@ impl<T: Guard> MutGuard<T> {
     }
 
     /// call this method to get mutable access to the underlying element
-    pub fn guard<'a>(&'a mut self) -> MutGuardBorrow<'a, T> {
+    pub fn guard(&mut self) -> MutGuardBorrow<T> {
         MutGuardBorrow { inner: self }
     }
 
