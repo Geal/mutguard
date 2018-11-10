@@ -1,10 +1,29 @@
 [package]
 name = "mut_guard"
 version = "0.1.0"
-authors = ["Geoffroy Couprie <geo.couprie@gmail.com>"]
+authors = [ "Geoffroy Couprie <contact@geoffroycouprie.com>" ]
+description = "Run a function after some data was mutably borrowed"
+license = "MIT"
+repository = "https://github.com/Geal/mutguard"
+readme = "README.md"
+documentation = "https://docs.rs/mut_guard"
+keywords = ["invariant", "contract programming"]
+categories = ["memory-management"]
+
+include = [
+  "LICENSE",
+  ".gitignore",
+  ".travis.yml",
+  "Cargo.toml",
+  "src/*.rs"
+]
 
 [dev-dependencies]
 serde = "^1.0"
 serde_derive = "^1.0"
 serde_json = "^1.0"
 
+[badges]
+travis-ci = { repository = "Geal/mutguard" }
+coveralls = { repository = "Geal/mutguard", branch = "master", service = "github" }
+maintenance = { status = "actively-developed" }
