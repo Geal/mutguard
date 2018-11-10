@@ -7,7 +7,7 @@ license = "MIT"
 repository = "https://github.com/Geal/mutguard"
 readme = "README.md"
 documentation = "https://docs.rs/mut_guard"
-keywords = ["invariant", "contract programming"]
+keywords = ["invariant", "contract-programming"]
 categories = ["memory-management"]
 
 include = [
