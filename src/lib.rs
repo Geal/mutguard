@@ -1,5 +1,89 @@
+//! # MutGuard
+//!
+//! this library allows you to call a function after
+//! some data has been mutably borrowed.
+//!
+//! ## Use cases
+//!
+//! ### Invariant checks
+//!
+//! It can be used to enforce invariant: every time a `&mut` is obtained,
+//! be it from the element's method definition, or from external code
+//! accessing public members directly, the invariant check will run and
+//! verify the data is correct.
+//!
+//! ```rust,should_panic
+//! extern crate mut_guard;
+//! use mut_guard::*;
+//!
+//! #[derive(Debug)]
+//! struct LessThan20(pub u8);
+//!
+//! impl Guard for LessThan20 {
+//!   fn finish(&mut self) {
+//!     assert!(self.0 <= 20, "invariant failed, internal value is too large: {}", self.0);
+//!   }
+//! }
+//!
+//! fn main() {
+//!   let mut val = MutGuard::new(LessThan20(0));
+//!
+//!   //"val: 0"
+//!   println!("val: {:?}", *val);
+//!
+//!   // this would fail because MutGuard does not implement DerefMut directly
+//!   //val.0 = 10;
+//!
+//!   // use the guard() method to get a `&mut LessThan20`
+//!   val.guard().0 = 10;
+//!
+//!   //"val: 10"
+//!   println!("val: {:?}", *val);
+//!
+//!   // once the value returned by guard() is dropped, the invariant will be checked
+//!   // This code will panic with the following message:
+//!   // 'invariant failed, internal value is too large: 30'
+//!   val.guard().0 = 30;
+//! }
+//! ```
+//!
+//! ### Logging
+//!
+//! Since the guard will be called every time there's a mutable access, we can log the changes
+//! there:
+//!
+//! ```rust
+//! # extern crate mut_guard;
+//! # use mut_guard::*;
+//! # 
+//! # fn main() {
+//!   let v = Vec::new();
+//!
+//!   // the wrap methods allows us to Specifiesy a closure instead of manually
+//!   // implementing Guard
+//!   let mut iv = MutGuard::wrap(v, |ref mut vec| {
+//!     println!("vector content is now {:?}", vec);
+//!   });
+//!
+//!   iv.guard().push(1);
+//!   // prints "vector content is now [1]"
+//!
+//!   iv.guard().push(2);
+//!   // prints "vector content is now [1, 2]"
+//!
+//!   iv.guard().push(3);
+//!   // prints "vector content is now [1, 2, 3]"
+//! # }
+//! ```
+//!
+//! ### Serialization
+//!
+//! The guard function could be used to store the element to a file after every change
+//!
 use std::ops::{Deref,DerefMut,Drop};
 
+/// stores an inner element that must implement the `Guard` trait,
+/// and forbids mutable borrows except going through its `guard()` method.
 pub struct MutGuard<T> {
   inner: T,
 }
@@ -12,6 +96,8 @@ impl<T> Deref for MutGuard<T> {
     }
 }
 
+/// Specifies a method that will be called after every time an element
+/// protected by a `Mutguard` will be mutably borrowed
 pub trait Guard {
   fn finish(&mut self);
 }
@@ -21,17 +107,21 @@ impl<T: Guard> MutGuard<T> {
     MutGuard { inner }
   }
 
+  /// call this method to get mutable access to the underlying element
   pub fn guard<'a>(&'a mut self) -> MutGuardBorrow<'a, T> {
     MutGuardBorrow { inner: self }
   }
 
+  /// returns the wrapped element, consuming the MutGuard
   pub fn into_inner(self) -> T {
     self.inner
   }
 }
 
-impl<T> MutGuard<T> {
-  pub fn wrap<'a, F>(inner: T, f: F) -> MutGuard<MutGuardWrapper<'a, T>>
+impl<'a, T> MutGuard<MutGuardWrapper<'a, T>> {
+  /// This method automatically generates a `Guard` implementation that will
+  /// call `f` after every time the inner element is mutably borrowed
+  pub fn wrap<F>(inner: T, f: F) -> MutGuard<MutGuardWrapper<'a, T>>
     where F: 'a + for<'r> FnMut(&'r mut T) {
     let wrapper = MutGuardWrapper {
       inner, f: Box::new(f)
@@ -40,6 +130,8 @@ impl<T> MutGuard<T> {
   }
 }
 
+/// Structure returned by the `Mutguard::guard()`. when this is dropped, iter
+/// will call the `Guard::finish()` method of the wrapped element
 pub struct MutGuardBorrow<'a, T: Guard> {
   inner: &'a mut MutGuard<T>,
 }
@@ -64,6 +156,7 @@ impl<'a,T: Guard> Drop for MutGuardBorrow<'a,T> {
   }
 }
 
+/// `Guard` implementation returned by `MutGuard::wrap()`
 pub struct MutGuardWrapper<'a, T> {
   inner: T,
   f: Box<'a+FnMut(&mut T)>,
@@ -164,8 +257,42 @@ mod tests {
       iv.guard().push(1);
       iv.guard().push(2);
       iv.guard().push(3);
+      assert_eq!(iv[0], 1);
+      assert_eq!(iv[1], 2);
+      assert_eq!(iv[2], 3);
     }
 
     assert_eq!(counter, 3);
+  }
+
+  #[test]
+  #[should_panic]
+  fn less_than() {
+    #[derive(Debug)]
+    struct LessThan20(pub u8);
+
+    impl Guard for LessThan20 {
+      fn finish(&mut self) {
+        assert!(self.0 <= 20, "invariant failed, internal value is too large: {}", self.0);
+      }
+    }
+
+    let mut val = MutGuard::new(LessThan20(0));
+
+    //"val: 0"
+    println!("val: {:?}", *val);
+
+    // this would fail because MutGuard does not implement DerefMut directly
+    //val.0 = 10;
+
+    // use the guard() method to get a `&mut LessThan20`
+    val.guard().0 = 10;
+
+    //"val: 10"
+    println!("val: {:?}", *val);
+
+    // once the value returned by guard() is dropped, the invariant will be checked
+    // we get the message "panicked at 'invariant failed, internal value is too large: 30'"
+    val.guard().0 = 30;
   }
 }
