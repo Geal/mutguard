@@ -354,4 +354,53 @@ mod tests {
         // we get the message "panicked at 'invariant failed, internal value is too large: 30'"
         val.guard().0 = 30;
     }
+
+    #[test]
+    #[should_panic(expected = "other panic")]
+    fn other_panic() {
+        #[derive(Debug)]
+        struct LessThan20(pub u8);
+
+        impl Guard for LessThan20 {
+            fn finish(&mut self) {
+                assert!(
+                    self.0 <= 20,
+                    "invariant failed, internal value is too large: {}",
+                    self.0
+                );
+            }
+        }
+
+        let mut val = MutGuard::new(LessThan20(0));
+
+        let v = val.guard();
+        panic!("other panic");
+    }
+
+    #[test]
+    fn mem_forget() {
+        use std::mem;
+
+        let mut counter = 0;
+        let v = Vec::new();
+
+        {
+            let mut iv = MutGuard::wrap(v, |_| counter += 1);
+
+            {
+              let mut g = iv.guard();
+              g.push(1);
+              mem::forget(g);
+            }
+
+            iv.guard().push(2);
+            iv.guard().push(3);
+            assert_eq!(iv[0], 1);
+            assert_eq!(iv[1], 2);
+            assert_eq!(iv[2], 3);
+        }
+
+        // with mem::forget, drop() will not be called on the guard
+        assert_eq!(counter, 2);
+    }
 }
