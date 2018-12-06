@@ -88,7 +88,7 @@ there:
 
 The guard function could be used to store the element to a file after every change.
 
-```
+```rust
 #[macro_use]
 extern crate serde_derive;
 extern crate mut_guard;
