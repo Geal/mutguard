@@ -373,7 +373,7 @@ mod tests {
 
         let mut val = MutGuard::new(LessThan20(0));
 
-        let v = val.guard();
+        let _v = val.guard();
         panic!("other panic");
     }
 
