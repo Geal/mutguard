@@ -208,7 +208,7 @@ impl<'a, T: Guard> Drop for MutGuardBorrow<'a, T> {
 /// `Guard` implementation returned by `MutGuard::wrap()`
 pub struct MutGuardWrapper<'a, T> {
     inner: T,
-    f: Box<'a + FnMut(&mut T)>,
+    f: Box<dyn 'a + FnMut(&mut T)>,
 }
 
 impl<'a, T: 'a> MutGuardWrapper<'a, T> {
@@ -373,7 +373,7 @@ mod tests {
 
         let mut val = MutGuard::new(LessThan20(0));
 
-        let v = val.guard();
+        let _v = val.guard();
         panic!("other panic");
     }
 
