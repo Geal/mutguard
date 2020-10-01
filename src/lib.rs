@@ -208,7 +208,7 @@ impl<'a, T: Guard> Drop for MutGuardBorrow<'a, T> {
 /// `Guard` implementation returned by `MutGuard::wrap()`
 pub struct MutGuardWrapper<'a, T> {
     inner: T,
-    f: Box<'a + FnMut(&mut T)>,
+    f: Box<dyn 'a + FnMut(&mut T)>,
 }
 
 impl<'a, T: 'a> MutGuardWrapper<'a, T> {
